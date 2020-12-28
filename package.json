@@ -1,0 +1,72 @@
+{
+  "name": "emoji-dungeon",
+  "version": "0.1.0",
+  "description": "Emoji-based dungeon crawler",
+  "main": "src/main.js",
+  "scripts": {
+    "compile": "webpack",
+    "build": "webpack -p",
+    "prestart": "npm run compile",
+    "start": "webpack-dev-server",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d public"
+  },
+  "keywords": [
+    "Emoji",
+    "Dungeon"
+  ],
+  "author": "Tiff Zhang",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/tiffz/emoji.git"
+  },
+  "postcss": {
+    "plugins": {
+      "autoprefixer": {}
+    }
+  },
+  "browserslist": [
+    "last 2 version",
+    "not dead",
+    "iOS >= 9"
+  ],
+  "dependencies": {
+    "@babel/preset-typescript": "^7.12.7",
+    "@material-ui/icons": "^4.11.2",
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
+    "react-hot-loader": "^4.13.0",
+    "typescript": "^4.1.3"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.12.10",
+    "@babel/plugin-proposal-object-rest-spread": "^7.12.1",
+    "@babel/plugin-transform-react-jsx": "^7.12.12",
+    "@babel/preset-env": "^7.12.11",
+    "@babel/preset-react": "^7.12.10",
+    "@hot-loader/react-dom": "^16.14.0",
+    "autoprefixer": "^9.8.6",
+    "babel-eslint": "^10.1.0",
+    "babel-loader": "^8.2.2",
+    "css-loader": "^3.6.0",
+    "eslint": "^7.16.0",
+    "eslint-config-airbnb": "^18.2.1",
+    "eslint-config-prettier": "^6.15.0",
+    "eslint-import-resolver-node": "^0.3.4",
+    "eslint-plugin-css-modules": "^2.11.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-prettier": "^3.3.0",
+    "eslint-plugin-react": "^7.21.5",
+    "gh-pages": "^2.2.0",
+    "postcss-loader": "^3.0.0",
+    "prettier": "^2.2.1",
+    "style-loader": "^1.3.0",
+    "webpack": "^4.44.2",
+    "webpack-cli": "^3.3.12",
+    "webpack-dev-server": "^3.11.0"
+  }
+}
