@@ -9,9 +9,11 @@
 
 .tile {
   overflow: visible;
+  position: relative;
 }
 
 .tileContent {
-  position: relative;
+  position: absolute;
   bottom: 0;
+  line-height: 100%;
 }
