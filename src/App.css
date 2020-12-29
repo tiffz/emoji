@@ -5,6 +5,16 @@
   justify-content: center;
   width: 100%;
   height: 100%;
+  overflow: hidden;
+}
+
+.dungeonView {
+  display: grid;
+  justify-items: center;
+  align-items: center;
+  background: #222;
+  width: 100%;
+  height: 100%;
 }
 
 .tile {
