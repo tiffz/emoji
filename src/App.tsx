@@ -1,5 +1,6 @@
-import React from 'react';
+import React, {useState} from 'react';
 
+import {useMovementKeys} from './useMovementKeys';
 import styles from './App.css';
 
 type Dungeon = {[index:string]: boolean};
@@ -45,11 +46,31 @@ const EMOJI_SIZE: Dimensions = {
 };
 
 export default function App() {
+  const [player, setPlayer] = useState(SAMPLE_PLAYER_LOCATION);
+
+  const dungeon = SAMPLE_DUNGEON;
+
+
+  const movePlayerByDelta = (delta: Coordinates) => {
+    const location = {
+      x: player.x + delta.x,
+      y: player.y + delta.y,
+    };
+
+    // Check to make sure the new location is not a wall.
+    const key = `${location.x},${location.y}`;
+    if (key in dungeon && dungeon[key]) {
+      setPlayer(location);
+    }
+  };
+  
+  useMovementKeys(movePlayerByDelta);
+
   return (
     <div className={styles.container}>
       <DungeonView 
-        dungeon={SAMPLE_DUNGEON} 
-        player={SAMPLE_PLAYER_LOCATION}
+        dungeon={dungeon} 
+        player={player}
         viewport={DEFAULT_VIEWPORT}
         tileSize={TILE_SIZE}
       />
@@ -72,8 +93,8 @@ function DungeonView({dungeon, player, viewport, tileSize}:
 
   for (let i = 0; i < viewport.height; i++) {
     for (let j = 0; j < viewport.width; j++) {
-      const x = startX + i;
-      const y = startY + j;
+      const x = startX + j;
+      const y = startY + i;
 
       const key = `${x},${y}`;
       const isPath = key in dungeon && dungeon[key];
