@@ -3,13 +3,13 @@ import React, {useState} from 'react';
 import {useMovementKeys} from './useMovementKeys';
 import styles from './App.css';
 
-type Dungeon = {[index:string]: boolean};
+type DungeonFloor = {[index:string]: boolean};
 type Dimensions = {width: number, height: number};
 type Coordinates = {x: number, y: number};
 
 const DEBUG = false;
 
-const SAMPLE_DUNGEON: Dungeon = {
+const SAMPLE_FLOOR: DungeonFloor = {
   '0,0': true,
   '0,1': true,
   '0,2': true,
@@ -56,15 +56,36 @@ function coordinatesEqual(a: Coordinates, b: Coordinates): boolean {
   return a.x === b.x && a.y === b.y;
 }
 
+/**
+ * Generates a canonical tilemap key for a given coordinate.
+ * @param c Coordinates to get a key for.
+ * @returns The key for the coordinates. 
+ * 
+ */
+function tileKey(c: Coordinates): string {
+  return `${c.x},${c.y}`;
+}
+
+/**
+ * Function to check if a given coordinate is walkable or not.
+ * @param c The location to check.
+ * @param floor The dungeon map to check against.
+ * @returns Whether the player can walk in this location or not.
+ */
+function isWalkable(c: Coordinates, floor: DungeonFloor): boolean {
+  const key = tileKey(c);
+  return key in floor && floor[key];
+}
+
 export default function App() {
   const [player, setPlayer] = useState(SAMPLE_PLAYER_LOCATION);
-  const [floor, setFloor] = useState(1);
-  const dungeon = SAMPLE_DUNGEON;
+  const [level, setLevel] = useState(1);
+  const floor = SAMPLE_FLOOR;
   const ladder = SAMPLE_LADDER_LOCATION;
 
   const moveUpFloor = () => {
     setPlayer(SAMPLE_PLAYER_LOCATION);
-    setFloor(floor + 1);
+    setLevel(level + 1);
   };
 
   const movePlayerByDelta = (delta: Coordinates) => {
@@ -74,8 +95,7 @@ export default function App() {
     };
 
     // Check to make sure the new location is not a wall.
-    const key = `${location.x},${location.y}`;
-    if (key in dungeon && dungeon[key]) {
+    if (isWalkable(location, floor)) {
       setPlayer(location);
     }
 
@@ -91,7 +111,7 @@ export default function App() {
   return (
     <div className={styles.container}>
       <DungeonView 
-        dungeon={dungeon} 
+        floor={floor} 
         player={player}
         ladder={ladder}
         viewport={DEFAULT_VIEWPORT}
@@ -102,11 +122,11 @@ export default function App() {
 }
 
 /**
- * Component to render the segment of the dungeon the player sees on their
+ * Component to render the segment of the floor the player sees on their
  * screen. The player is at the center of the viewport.
  */
-function DungeonView({dungeon, player, viewport, tileSize, ladder}: 
-    {dungeon: Dungeon, player: Coordinates, viewport: Dimensions,
+function DungeonView({floor, player, viewport, tileSize, ladder}: 
+    {floor: DungeonFloor, player: Coordinates, viewport: Dimensions,
       tileSize: Dimensions, ladder: Coordinates}) {
 
   const tiles = [];
@@ -121,8 +141,8 @@ function DungeonView({dungeon, player, viewport, tileSize, ladder}:
 
       const tile = {x, y};
 
-      const key = `${x},${y}`;
-      const isPath = key in dungeon && dungeon[key];
+      const key = tileKey(tile);
+      const isPath = isWalkable(tile, floor);
 
       let character = <></>;
       const isPlayer = coordinatesEqual(tile, player);
@@ -138,9 +158,10 @@ function DungeonView({dungeon, player, viewport, tileSize, ladder}:
           className={styles.tile}
           key={key}
           style={{ 
+            borderRadius: tileBorderRadius(tile, floor),
             width: tileSize.width,
             height: tileSize.height,
-            backgroundColor: isPath ? '#f5f5f5' : 'none',
+            backgroundColor: isPath ? '#eee' : 'none',
           }}
         >
           {DEBUG ? <span className={styles.debugCoordinates}>{key}</span> : ''}
@@ -161,6 +182,46 @@ function DungeonView({dungeon, player, viewport, tileSize, ladder}:
   );
 }
 
+
+const TILE_CORNER_ROUNDING = 8;
+
+/**
+ * Smooths the corners for a tile in the dungeon based on its neighbors.
+ * @param tile The tile to style. 
+ * @param floor Floorplan to check the tile's neighbors.
+ * @returns CSS string border radius delcaration.
+ */
+function tileBorderRadius(tile: Coordinates, floor: DungeonFloor): string {
+  if (!isWalkable(tile, floor)) {
+    return 'none';
+  }
+
+  const left = isWalkable({
+    x: tile.x - 1,
+    y: tile.y,
+  }, floor);
+  const right = isWalkable({
+    x: tile.x + 1,
+    y: tile.y,
+  }, floor);
+  const up = isWalkable({
+    x: tile.x,
+    y: tile.y - 1,
+  }, floor);
+  const down = isWalkable({
+    x: tile.x,
+    y: tile.y + 1,
+  }, floor);
+
+  // Border radius order: Top left, top right, bottom right, bottom left
+  return `
+    ${up || left ? 0 : TILE_CORNER_ROUNDING}px
+    ${up || right ? 0 : TILE_CORNER_ROUNDING}px
+    ${down || right ? 0 : TILE_CORNER_ROUNDING}px
+    ${down || left ? 0 : TILE_CORNER_ROUNDING}px
+  `;
+}
+
 /**
  * Component to render a single interactable symbol.
  */
@@ -169,6 +230,7 @@ function Emoji({symbol, className = ''}: {symbol: string, className?: string}) {
     <div 
       className={`${styles.tileContent} ${className}`} 
       style={{
+        // Shrink emoji, so that it's thinner than its container.
         fontSize: EMOJI_SIZE.height * 0.8,
         height: EMOJI_SIZE.width,
         width: EMOJI_SIZE.width,
