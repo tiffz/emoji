@@ -29,6 +29,7 @@ const SAMPLE_DUNGEON: Dungeon = {
 };
 
 const SAMPLE_PLAYER_LOCATION: Coordinates = {x: 0, y: 0};
+const SAMPLE_LADDER_LOCATION: Coordinates = {x: 5, y: 5};
 
 const DEFAULT_VIEWPORT: Dimensions = {
   width: 15,
@@ -45,11 +46,26 @@ const EMOJI_SIZE: Dimensions = {
   height: 100,
 };
 
+/**
+ * Checks to see if two sets of coordinates refer to the same spot.
+ * @param a 
+ * @param b
+ * @returns Whether a and b are the same location.
+ */
+function coordinatesEqual(a: Coordinates, b: Coordinates): boolean {
+  return a.x === b.x && a.y === b.y;
+}
+
 export default function App() {
   const [player, setPlayer] = useState(SAMPLE_PLAYER_LOCATION);
-
+  const [floor, setFloor] = useState(1);
   const dungeon = SAMPLE_DUNGEON;
+  const ladder = SAMPLE_LADDER_LOCATION;
 
+  const moveUpFloor = () => {
+    setPlayer(SAMPLE_PLAYER_LOCATION);
+    setFloor(floor + 1);
+  };
 
   const movePlayerByDelta = (delta: Coordinates) => {
     const location = {
@@ -62,6 +78,12 @@ export default function App() {
     if (key in dungeon && dungeon[key]) {
       setPlayer(location);
     }
+
+    // Logic that happens after moving the player.
+    if (coordinatesEqual(location, ladder)) {
+      // Move the player to another floor if they found the ladder.
+      moveUpFloor();
+    }
   };
   
   useMovementKeys(movePlayerByDelta);
@@ -71,6 +93,7 @@ export default function App() {
       <DungeonView 
         dungeon={dungeon} 
         player={player}
+        ladder={ladder}
         viewport={DEFAULT_VIEWPORT}
         tileSize={TILE_SIZE}
       />
@@ -82,9 +105,9 @@ export default function App() {
  * Component to render the segment of the dungeon the player sees on their
  * screen. The player is at the center of the viewport.
  */
-function DungeonView({dungeon, player, viewport, tileSize}: 
+function DungeonView({dungeon, player, viewport, tileSize, ladder}: 
     {dungeon: Dungeon, player: Coordinates, viewport: Dimensions,
-      tileSize: Dimensions}) {
+      tileSize: Dimensions, ladder: Coordinates}) {
 
   const tiles = [];
 
@@ -96,9 +119,20 @@ function DungeonView({dungeon, player, viewport, tileSize}:
       const x = startX + j;
       const y = startY + i;
 
+      const tile = {x, y};
+
       const key = `${x},${y}`;
       const isPath = key in dungeon && dungeon[key];
-      const isPlayer = x === player.x && y === player.y;
+
+      let character = <></>;
+      const isPlayer = coordinatesEqual(tile, player);
+      const isLadder = coordinatesEqual(tile, ladder);
+  
+      if (isPlayer) {
+        character = <Emoji symbol={'🐱'} className={styles.bounce} />;
+      } else if (isLadder) {
+        character = <Emoji symbol={'🪜'} />;
+      }
       tiles.push(
         <div 
           className={styles.tile}
@@ -106,11 +140,11 @@ function DungeonView({dungeon, player, viewport, tileSize}:
           style={{ 
             width: tileSize.width,
             height: tileSize.height,
-            backgroundColor: isPath ? '#e0e0e0' : 'none',
+            backgroundColor: isPath ? '#f5f5f5' : 'none',
           }}
         >
           {DEBUG ? <span className={styles.debugCoordinates}>{key}</span> : ''}
-          {isPlayer? <Emoji symbol={'🐱'} /> : ''}
+          {character}
         </div>
       );
     }
@@ -127,11 +161,17 @@ function DungeonView({dungeon, player, viewport, tileSize}:
   );
 }
 
-function Emoji({symbol}: {symbol: string}) {
+/**
+ * Component to render a single interactable symbol.
+ */
+function Emoji({symbol, className = ''}: {symbol: string, className?: string}) {
   return (
-    <span className={styles.tileContent} style={{
-      fontSize: EMOJI_SIZE.height,
-      width: EMOJI_SIZE.width,
-    }}>{symbol}</span>
+    <div 
+      className={`${styles.tileContent} ${className}`} 
+      style={{
+        fontSize: EMOJI_SIZE.height * 0.8,
+        height: EMOJI_SIZE.width,
+        width: EMOJI_SIZE.width,
+      }}>{symbol}</div>
   );
 }

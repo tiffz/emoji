@@ -1,3 +1,8 @@
+@font-face {
+  font-family: 'Noto Color Emoji';
+  src: url(https://gitcdn.xyz/repo/googlefonts/noto-emoji/main/fonts/NotoColorEmoji.ttf);
+}
+
 :root {
   --bg-color: #F5F5F5;
   --bg-transition: background 0.1s ease-in-out;
