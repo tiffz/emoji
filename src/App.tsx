@@ -6,6 +6,8 @@ import styles from './App.css';
 type DungeonFloor = {[index:string]: boolean};
 type Dimensions = {width: number, height: number};
 type Coordinates = {x: number, y: number};
+type LevelPlan = {floor: DungeonFloor, player: Coordinates,
+  ladder: Coordinates};
 
 const DEBUG = false;
 
@@ -77,15 +79,41 @@ function isWalkable(c: Coordinates, floor: DungeonFloor): boolean {
   return key in floor && floor[key];
 }
 
+const cachedLevels: {[index:number]: LevelPlan} = {};
+function generateLevel(num: number): LevelPlan {
+  // Avoid regenerating a level if we've already done it.
+  if (num in cachedLevels) return cachedLevels[num];
+
+  const extraTiles: DungeonFloor = {};
+
+  for (let i = 0; i < num; i++) {
+    extraTiles[tileKey({x: 2 + i, y: 1})] = true;
+  }
+
+  const nextLevel: LevelPlan = {
+    floor: {...SAMPLE_FLOOR, ...extraTiles},
+    player: {...SAMPLE_PLAYER_LOCATION},
+    ladder: {...SAMPLE_LADDER_LOCATION},
+  };
+
+  return nextLevel;
+}
+
 export default function App() {
-  const [player, setPlayer] = useState(SAMPLE_PLAYER_LOCATION);
-  const [level, setLevel] = useState(1);
-  const floor = SAMPLE_FLOOR;
-  const ladder = SAMPLE_LADDER_LOCATION;
+  const level = generateLevel(1);
+  const [player, setPlayer] = useState(level.player);
+  const [levelNum, setLevelNum] = useState(1);
+  const [floor, setFloor] = useState(level.floor);
+  const [ladder, setLadder] = useState(level.ladder);
 
   const moveUpFloor = () => {
-    setPlayer(SAMPLE_PLAYER_LOCATION);
-    setLevel(level + 1);
+    const nextLevelNum = levelNum + 1; 
+    const level = generateLevel(nextLevelNum);
+    setPlayer(level.player);
+    setFloor(level.floor);
+    setLadder(level.ladder);
+
+    setLevelNum(nextLevelNum);
   };
 
   const movePlayerByDelta = (delta: Coordinates) => {
