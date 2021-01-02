@@ -40,9 +40,11 @@
 
 .debugCoordinates {
   position: absolute;
-  top: 0;
+  bottom: 0;
   left: 0;
-  background: white;
+  background: hsla(0, 0%, 100%, 30%);
+  font-family: monospace;
+  font-size: 11px;
   padding: 4px;
   z-index: 99;
 }
