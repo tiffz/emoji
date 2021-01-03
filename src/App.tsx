@@ -1,8 +1,9 @@
 import React, {useState} from 'react';
 
 import {useMovementKeys} from './useMovementKeys';
-import {Dimensions, Coordinates, DungeonFloor, tileKey,
-  generateLevel, coordinatesEqual} from './generateLevel';
+import {DungeonFloor, generateLevel} from './dungeon/generateLevel';
+import {Dimensions, Coordinates, coordinatesEqual,
+  tileKey} from './dungeon/common';
 import styles from './App.css';
 
 const DEBUG = false;

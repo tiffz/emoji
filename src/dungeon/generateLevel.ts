@@ -1,30 +1,22 @@
-import {randomInt, coinFlip} from './utils/random';
+import {randomInt, coinFlip} from '../utils/random';
+import {Entity} from './entity';
+import {Dimensions, Coordinates, tileKey} from './common';
 
+/**
+ * A map of which tiles in the dungeon are walkable.
+ */
 export type DungeonFloor = {[index:string]: boolean};
-export type Dimensions = {width: number, height: number};
-export type Coordinates = {x: number, y: number};
+
+/**
+ * The non-terrain items present in the dungeon, indexed by coorinates.
+ */
+export type EntityMap = {[index:string]: Entity};
+
+/**
+ * Wrapper object for all data created when generating a dungeon.
+ */
 export type LevelPlan = {floor: DungeonFloor, player: Coordinates,
-  ladder: Coordinates};
-
-/**
- * Checks to see if two sets of coordinates refer to the same spot.
- * @param a 
- * @param b
- * @returns Whether a and b are the same location.
- */
-export function coordinatesEqual(a: Coordinates, b: Coordinates): boolean {
-  return a.x === b.x && a.y === b.y;
-}
-
-/**
- * Generates a canonical tilemap key for a given coordinate.
- * @param c Coordinates to get a key for.
- * @returns The key for the coordinates. 
- * 
- */
-export function tileKey(c: Coordinates): string {
-  return `${c.x},${c.y}`;
-}
+  ladder: Coordinates, entities: Array<Entity>};
 
 const cachedLevels: {[index:number]: LevelPlan} = {};
 /**
@@ -39,6 +31,7 @@ export function generateLevel(num: number): LevelPlan {
   const floor: DungeonFloor = {};
   let player: Coordinates = {x: 0, y: 0};
   let ladder: Coordinates = {x: 0, y: 0};
+  let entities: Array<Entity> = [];
 
   const center: Coordinates = {x: 0, y: 0};
   let leftEntrance: boolean = true;
@@ -118,5 +111,5 @@ export function generateLevel(num: number): LevelPlan {
     }
 
   }
-  return {floor, player, ladder};
+  return {floor, player, ladder, entities};
 }
