@@ -1,37 +1,11 @@
 import React, {useState} from 'react';
 
 import {useMovementKeys} from './useMovementKeys';
+import {Dimensions, Coordinates, DungeonFloor, tileKey,
+  generateLevel, coordinatesEqual} from './generateLevel';
 import styles from './App.css';
 
-type DungeonFloor = {[index:string]: boolean};
-type Dimensions = {width: number, height: number};
-type Coordinates = {x: number, y: number};
-type LevelPlan = {floor: DungeonFloor, player: Coordinates,
-  ladder: Coordinates};
-
 const DEBUG = false;
-
-const SAMPLE_FLOOR: DungeonFloor = {
-  '0,0': true,
-  '0,1': true,
-  '0,2': true,
-  '0,3': true,
-  '0,4': true,
-  '0,5': true,
-  '1,0': true,
-  '1,1': true,
-  '1,2': true,
-  '1,3': true,
-  '1,4': true,
-  '1,5': true,
-  '2,5': true,
-  '3,5': true,
-  '4,5': true,
-  '5,5': true,
-};
-
-const SAMPLE_PLAYER_LOCATION: Coordinates = {x: 0, y: 0};
-const SAMPLE_LADDER_LOCATION: Coordinates = {x: 5, y: 5};
 
 const DEFAULT_VIEWPORT: Dimensions = {
   width: 15,
@@ -49,26 +23,6 @@ const EMOJI_SIZE: Dimensions = {
 };
 
 /**
- * Checks to see if two sets of coordinates refer to the same spot.
- * @param a 
- * @param b
- * @returns Whether a and b are the same location.
- */
-function coordinatesEqual(a: Coordinates, b: Coordinates): boolean {
-  return a.x === b.x && a.y === b.y;
-}
-
-/**
- * Generates a canonical tilemap key for a given coordinate.
- * @param c Coordinates to get a key for.
- * @returns The key for the coordinates. 
- * 
- */
-function tileKey(c: Coordinates): string {
-  return `${c.x},${c.y}`;
-}
-
-/**
  * Function to check if a given coordinate is walkable or not.
  * @param c The location to check.
  * @param floor The dungeon map to check against.
@@ -77,118 +31,6 @@ function tileKey(c: Coordinates): string {
 function isWalkable(c: Coordinates, floor: DungeonFloor): boolean {
   const key = tileKey(c);
   return key in floor && floor[key];
-}
-
-/**
- * Generates a random number between a max and minimum.
- * @param max Highest possible number that can be generated, inclusive.
- * @param min Optional minimum number, inclusive. 
- */
-function randomInt(max: number, min = 0): number {
-  return min + Math.floor(Math.random() * (max + 1 - min));
-}
-
-/**
- * Returns true or false randomly.
- * @returns true if heads, false if tails.
- */
-function coinFlip(): boolean {
-  return Math.random() > 0.5;
-}
-
-const cachedLevels: {[index:number]: LevelPlan} = {};
-/**
- * Generates a single floor of the dungeon.
- * @param num What floor number the player is on.
- * @returns Data for the level the player can interact with.
- */
-function generateLevel(num: number): LevelPlan {
-  // Avoid regenerating a level if we've already done it.
-  if (num in cachedLevels) return cachedLevels[num];
-
-  const floor: DungeonFloor = {};
-  let player: Coordinates = {x: 0, y: 0};
-  let ladder: Coordinates = {x: 0, y: 0};
-
-  const center: Coordinates = {x: 0, y: 0};
-  let leftEntrance: boolean = true;
-
-  // Generate one room for each level the player is on.
-  for (let i = 0; i < num; i++) {
-    const roomSize: Dimensions = {
-      height: randomInt(10, 4),
-      width: randomInt(10, 4),
-    };
-
-    const relativeCenter: Coordinates = {
-      x: Math.floor(roomSize.width / 2),
-      y: Math.floor(roomSize.height / 2),
-    };
-
-    if (leftEntrance) {
-      center.x += relativeCenter.x;
-    } else {
-      center.y += relativeCenter.y;
-    }
-
-    // Draw the room.
-    const xStart = center.x - relativeCenter.x;
-    const xEnd = xStart + roomSize.width;
-    const yStart = center.y - relativeCenter.y;
-    const yEnd = yStart + roomSize.height;
-    
-    for (let y = yStart; y < yEnd; y++) {
-      for (let x = xStart; x < xEnd; x++) {
-        // Add walkable path.
-        floor[tileKey({x, y})] = true;
-      }
-    }
-
-    // Add additional room features.
-    if (i === 0) {
-      // Place the player at the beginning of the path.
-      player = {...center};
-    }
-    if (i === num - 1) {
-      // Place the ladder at the end of the path. 
-      ladder = {
-        // Make the ladder not collide with the player when there's one room.
-        x: center.x + 1,
-        y: center.y,
-      };
-    } else {
-      // Add a corridor only if we're not at the end.
-      const corridorLength = randomInt(5, 2);
-
-      leftEntrance = coinFlip();
-
-      if (leftEntrance) {
-        // Go right if heads.
-        const xOffset = center.x + (roomSize.width - relativeCenter.x);
-        const y = center.y;
-
-        let x;
-        for (x = xOffset; x < xOffset + corridorLength; x++) {
-          floor[tileKey({x, y})] = true;
-        }
-
-        center.x = x;
-      } else {
-        // Otherwise go down.
-        const yOffset = center.y + (roomSize.height - relativeCenter.y);
-        const x = center.x;
-
-        let y;
-        for (y = yOffset; y < yOffset + corridorLength; y++) {
-          floor[tileKey({x, y})] = true;
-        }
-
-        center.y = y;
-      }
-    }
-
-  }
-  return {floor, player, ladder};
 }
 
 export default function App() {
